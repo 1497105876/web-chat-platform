@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>实时聊天室</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles-desktop.css">
+  <link rel="stylesheet" href="/styles-mobile.css">
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">WebSocket · MySQL · Nginx</p>
+        <h1>实时聊天室</h1>
+        <p class="sub">加入频道，与在线成员聊天</p>
+        <p class="sub">展示最近消息与在线成员列表</p>
+        <p class="sub"></p>
+      </div>
+      <div class="status">
+        <span id="status-dot" class="dot dot-off"></span>
+        <span id="status-text">未连接</span>
+      </div>
+    </header>
+
+    <section class="controls">
+      <div class="field">
+        <label for="username">昵称（不可重复）</label>
+        <input id="username" type="text" placeholder="你的昵称" maxlength="30" />
+      </div>
+      <div class="field">
+        <label for="channel">频道</label>
+        <select id="channel">
+          <option value="room1">room1</option>
+          <option value="room2">room2</option>
+          <option value="room3">room3</option>
+        </select>
+      </div>
+      <div class="actions">
+        <button id="connect-btn" class="primary">加入</button>
+        <button id="disconnect-btn" class="ghost" disabled>离开</button>
+      </div>
+    </section>
+
+    <main class="layout">
+      <section class="panel messages">
+        <div class="panel-head">
+          <h2>消息</h2>
+          <span id="message-count" class="pill">0</span>
+        </div>
+        <div id="log" class="log"></div>
+        <form id="chat-form" class="chat-form">
+          <input id="message" type="text" placeholder="说点什么..." maxlength="500" autocomplete="off" />
+          <button type="button" id="emoji-btn" title="表情" style="font-size:22px;padding:0 8px;background:none;border:none;cursor:pointer;">😊</button>
+          <div id="emoji-panel" style="display:none;position:absolute;bottom:48px;left:0;z-index:200;background:#222;padding:8px 12px;border-radius:10px;box-shadow:0 2px 8px #0003;max-width:90vw;max-height:30vh;overflow:auto;"></div>
+          <button type="submit" class="primary" disabled>发送</button>
+        </form>
+      </section>
+
+      <section class="panel sidebar">
+        <div class="panel-head">
+          <h2>在线</h2>
+          <span id="online-count" class="pill">0</span>
+        </div>
+        <ul id="online-list" class="online-list"></ul>
+        <div class="note">
+          <p>发送有频率限制，每秒一次。</p>
+          <p id="info"></p>
+        </div>
+      </section>  
+    </main>
+  </div>
+
+  <script src="/client.js"></script>
+</body>
+</html>
