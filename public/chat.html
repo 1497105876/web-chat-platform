@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>聊天室</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div class="chat-page">
+    <header class="chat-header">
+      <div class="chat-logo">聊天室</div>
+      <div class="chat-header-center">
+        <span id="channel-name" class="channel-name">大厅</span>
+        <span id="online-count" class="pill">0 在线</span>
+      </div>
+      <div class="chat-header-right">
+        <span id="user-display" class="user-badge"></span>
+        <button id="admin-btn" class="ghost" style="display:none" onclick="location.href='/admin.html'">管理</button>
+        <button id="logout-btn" class="ghost">退出</button>
+      </div>
+    </header>
+
+    <div class="chat-layout">
+      <aside class="chat-sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-title">频道</div>
+          <ul id="room-list" class="room-list"></ul>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-title">私聊</div>
+          <ul id="dm-list" class="room-list"></ul>
+          <button id="new-dm-btn" class="ghost sidebar-add-btn">+ 新私聊</button>
+        </div>
+      </aside>
+
+      <main class="chat-main">
+        <div id="log" class="log"></div>
+        <div id="reply-preview" class="reply-preview" style="display:none">
+          <span id="reply-text"></span>
+          <button id="reply-cancel" class="reply-cancel">&times;</button>
+        </div>
+        <form id="chat-form" class="chat-form">
+          <input id="message" type="text" placeholder="说点什么..." maxlength="500" autocomplete="off" />
+          <button type="button" id="emoji-btn" title="表情" class="emoji-item">😊</button>
+          <div id="emoji-panel" style="display:none"></div>
+          <button type="submit" class="primary" disabled>发送</button>
+        </form>
+      </main>
+
+      <aside class="chat-rightbar">
+        <div class="panel-head">
+          <h2>在线</h2>
+          <span id="online-count-2" class="pill">0</span>
+        </div>
+        <ul id="online-list" class="online-list"></ul>
+        <div class="note">
+          <p id="info"></p>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <div id="dm-modal" class="modal" style="display:none">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>发起私聊</h3>
+        <button class="modal-close" id="dm-modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input id="dm-search" type="text" placeholder="搜索用户名..." />
+        <ul id="dm-user-list" class="dm-user-list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/auth.js"></script>
+  <script src="/js/ws.js"></script>
+  <script src="/js/room.js"></script>
+  <script src="/js/chat.js"></script>
+  <script src="/js/upload.js"></script>
+</body>
+</html>
