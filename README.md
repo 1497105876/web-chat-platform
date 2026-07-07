@@ -1,51 +1,86 @@
 # 实时聊天室
 
-基于 WebSocket + Express + MySQL 的实时聊天系统，支持多房间群聊、在线用户列表、消息持久化和表情发送。
+基于 WebSocket + Express + MySQL 的实时聊天系统，支持用户认证、多房间群聊、私聊、图片消息、消息回复、管理员后台等功能。
 
 ## 功能特性
 
 | 功能 | 状态 | 说明 |
 |------|------|------|
-| 可视化聊天界面 | 已实现 | 响应式 Web 界面，适配桌面和移动端 |
+| 用户注册/登录 | 已实现 | bcrypt 密码哈希 + JWT 会话管理 |
+| 可视化聊天界面 | 已实现 | 三栏响应式布局，适配桌面和移动端 |
 | 在线用户列表 | 已实现 | 右侧面板实时显示当前频道在线成员 |
-| 多人群聊 | 已实现 | 支持 room1/room2/room3 三个频道 |
+| 多人群聊 | 已实现 | 预置大厅/技术交流/休闲水区三个频道 |
 | 消息持久化 | 已实现 | MySQL 存储，数据库不可用时自动降级为本地 JSON 缓存 |
 | 表情发送 | 已实现 | 内置表情面板，点击插入消息 |
 | 历史消息 | 已实现 | 加入频道时加载最近 50 条历史消息 |
-| 一对一私聊 | 待实现 | — |
-| 图片传输 | 待实现 | — |
-| 管理员监控 | 待实现 | — |
-| 踢出用户 | 待实现 | — |
-| 禁止/允许登录 | 待实现 | — |
+| 图片传输 | 已实现 | 支持 jpg/png/gif/webp，最大 5MB |
+| 消息回复 | 已实现 | 引用原消息进行回复 |
+| 一对一私聊 | 已实现 | 自动创建 DM 房间 |
+| 管理员后台 | 已实现 | 用户管理、封禁/解封、踢出、禁言 |
+| 审计日志 | 已实现 | 记录所有管理操作和登录登出 |
+| 已读回执 | 已实现 | 消息已读状态记录 |
+| 降级模式 | 已实现 | 数据库不可用时自动使用本地文件缓存 |
 
 ## 技术栈
 
-- **前端**: HTML5 + CSS3 + Vanilla JavaScript
+- **前端**: HTML5 + CSS3 + Vanilla JavaScript（模块化）
 - **后端**: Node.js + Express
-- **通信**: WebSocket (ws 库)
+- **通信**: WebSocket (ws 库)，JWT 认证
 - **数据库**: MySQL (mysql2)，自动降级为本地文件缓存
+- **认证**: bcrypt + jsonwebtoken
 - **反向代理**: Nginx (可选配置见 `config/nginx-chat.conf`)
 
 ## 项目结构
 
 ```
 chat/
-├── public/                 # 前端静态文件
-│   ├── index.html          # 聊天页面
-│   ├── client.js           # WebSocket 客户端逻辑
-│   ├── styles.css          # 基础样式 + 移动端适配
-│   ├── styles-desktop.css  # 桌面端样式
-│   └── styles-mobile.css   # 移动端样式
 ├── src/
-│   ├── server.js           # Express + WebSocket 服务端
-│   └── msgBuffer.js        # 本地消息缓存（数据库降级时使用）
+│   ├── server.js              # 入口：HTTP + WebSocket 服务，JWT 认证
+│   ├── db.js                  # 数据库连接池 + v2.0 Schema 自动建表
+│   ├── msgBuffer.js           # 本地消息缓存（降级用）
+│   ├── auth/
+│   │   ├── middleware.js      # JWT 签发/验证 + HTTP 鉴权中间件
+│   │   └── password.js       # bcrypt 密码哈希
+│   ├── handlers/
+│   │   ├── connection.js     # WebSocket 连接管理（频道成员/广播）
+│   │   ├── chat.js           # 聊天消息处理（文本/图片/回复）
+│   │   ├── room.js           # 房间加入/离开
+│   │   ├── admin.js          # 管理员 WebSocket 指令（踢人/封禁/禁言）
+│   │   └── dm.js             # 私聊消息处理
+│   ├── routes/
+│   │   ├── auth.js           # 注册/登录/登出/获取用户 API
+│   │   ├── admin.js          # 管理员 API（用户管理/封禁/审计日志）
+│   │   └── health.js         # 健康检查 + 缓存合并
+│   ├── services/
+│   │   ├── message.js        # 消息存储/查询/已读标记
+│   │   ├── ban.js            # 封禁检查/执行/解除
+│   │   └── audit.js          # 审计日志记录/查询
+│   └── utils/
+│       └── validate.js       # 输入校验工具函数
+├── public/
+│   ├── index.html            # 登录/注册页
+│   ├── chat.html             # 聊天主界面
+│   ├── admin.html            # 管理后台
+│   ├── js/
+│   │   ├── auth.js           # 登录/注册/JWT 管理
+│   │   ├── ws.js             # WebSocket 连接管理（自动重连）
+│   │   ├── chat.js           # 聊天界面逻辑（消息渲染/回复/表情）
+│   │   ├── room.js           # 频道切换/私聊列表
+│   │   ├── upload.js         # 文件上传（预留）
+│   │   └── admin.js          # 管理后台逻辑
+│   ├── css/
+│   │   └── styles.css        # 统一样式（桌面/平板/手机响应式）
+│   └── uploads/              # 用户上传文件存储
 ├── db/
-│   ├── schema.sql          # 数据库建表脚本
-│   └── messages-buffer.json # 运行时缓存文件
+│   ├── schema.sql            # v2.0 建表 SQL（10 张表）
+│   └── messages-buffer.json  # 运行时缓存文件
 ├── config/
-│   └── nginx-chat.conf     # Nginx 反向代理配置
-├── .env                    # 环境变量配置
-├── .gitignore
+│   └── nginx-chat.conf       # Nginx 配置（静态文件 + API + WebSocket）
+├── 历史/
+│   ├── 实施方案.md            # 重构实施方案
+│   ├── 数据库设计文档.md       # 数据库设计文档
+│   └── chat_app_backup.sql   # 旧数据备份
+├── .env                      # 环境变量
 ├── package.json
 └── README.md
 ```
@@ -67,13 +102,7 @@ npm install
 
 ### 配置
 
-复制并编辑环境变量：
-
-```bash
-cp .env.example .env
-```
-
-`.env` 配置项：
+编辑 `.env` 文件：
 
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
@@ -83,7 +112,8 @@ cp .env.example .env
 | DB_USER | root | MySQL 用户名 |
 | DB_PASSWORD | | MySQL 密码 |
 | DB_NAME | chat_app | 数据库名 |
-| MESSAGE_HISTORY_LIMIT | 50 | 加入频道时加载的历史消息条数 |
+| JWT_SECRET | | JWT 签名密钥（生产环境必须修改） |
+| JWT_EXPIRES_IN | 7d | JWT 过期时间 |
 | ALLOWED_ORIGINS | * | 允许的跨域来源，逗号分隔 |
 
 ### 初始化数据库
@@ -91,6 +121,8 @@ cp .env.example .env
 ```bash
 mysql -u root -p < db/schema.sql
 ```
+
+数据库表会在服务启动时自动创建（如不存在）。
 
 ### 启动
 
@@ -102,60 +134,113 @@ npm start
 npm run dev
 ```
 
-浏览器打开 `http://localhost:3000` 即可使用。
+浏览器打开 `http://localhost:3000` 进入登录页。
 
 ## 使用说明
 
-1. 输入昵称（频道内不可重复）
-2. 选择频道（room1 / room2 / room3）
-3. 点击「加入」连接服务器
-4. 在消息框输入内容，点击「发送」或回车发送
-5. 点击 😊 按钮可插入表情
+### 普通用户
 
-## Nginx 部署（可选）
+1. 在登录页注册账号或登录
+2. 进入聊天页后，点击左侧频道加入群聊
+3. 在消息框输入内容，点击「发送」或回车发送
+4. 点击消息右上角「回复」可引用回复
+5. 点击左侧「+ 新私聊」可发起一对一私聊
+6. 点击 😊 按钮可插入表情
 
-```bash
-# 复制配置到 Nginx
-cp config/nginx-chat.conf /etc/nginx/conf.d/chat.conf
+### 管理员
 
-# 重载 Nginx
-nginx -s reload
-```
-
-Nginx 配置支持 WebSocket 升级和静态文件服务，适合生产环境部署。
+1. 使用管理员账号登录（角色为 `admin` 或 `super_admin`）
+2. 聊天页顶部出现「管理」按钮，点击进入管理后台
+3. 用户管理：搜索用户、调整角色、封禁/解封
+4. 审计日志：查看所有操作记录，支持按操作类型筛选
 
 ## API
 
+### 认证 API
+
+| 端点 | 方法 | 说明 | 认证 |
+|------|------|------|------|
+| `/api/auth/register` | POST | 注册新用户 | 否 |
+| `/api/auth/login` | POST | 登录（返回 JWT） | 否 |
+| `/api/auth/logout` | POST | 登出 | Bearer |
+| `/api/auth/me` | GET | 获取当前用户信息 | Bearer |
+
+### 管理员 API（需 admin 角色）
+
 | 端点 | 方法 | 说明 |
 |------|------|------|
-| `/healthz` | GET | 健康检查，返回 `{"ok": true}` |
+| `/api/admin/users` | GET | 用户列表（分页+搜索） |
+| `/api/admin/users/:id` | PUT | 修改用户角色/状态 |
+| `/api/admin/ban` | POST | 封禁用户 |
+| `/api/admin/ban/:id` | DELETE | 解除封禁 |
+| `/api/admin/room/:id/mute` | PUT | 禁言/解除禁言 |
+| `/api/admin/room/:id/kick` | DELETE | 踢出用户 |
+| `/api/admin/logs` | GET | 审计日志（分页+筛选） |
+
+### 其他
+
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/healthz` | GET | 健康检查 |
 | `/api/merge-buffer` | POST | 将本地缓存消息合并到数据库 |
 
 ## WebSocket 协议
 
-客户端发送 JSON 消息，`type` 字段标识消息类型：
+连接地址: `ws://host/ws?token=<JWT>`
 
-### join - 加入频道
+### 客户端 → 服务端
 
-```json
-{ "type": "join", "username": "张三", "channel": "room1" }
-```
+| type | 参数 | 说明 |
+|------|------|------|
+| `join` | `{ channel }` | 加入频道 |
+| `leave` | | 离开当前频道 |
+| `chat` | `{ content, contentType, replyTo? }` | 发送消息 |
+| `dm` | `{ targetUserId }` | 发起私聊 |
+| `read` | `{ lastMessageId }` | 上报已读 |
+| `admin:kick` | `{ userId, roomId }` | 踢出用户 (管理员) |
+| `admin:ban` | `{ userId, reason, expiresAt? }` | 封禁用户 (管理员) |
+| `admin:mute` | `{ userId, roomId, muted }` | 禁言/解除 (管理员) |
 
-### chat - 发送消息
-
-```json
-{ "type": "chat", "content": "你好！" }
-```
-
-### 服务端推送类型
+### 服务端 → 客户端
 
 | type | 说明 |
 |------|------|
-| `history` | 加入频道后收到的历史消息列表 |
-| `chat` | 其他用户发送的聊天消息 |
-| `system` | 系统通知（加入/离开等） |
-| `users` | 在线用户列表更新 |
+| `auth_ok` / `auth_fail` | 认证结果 |
+| `history` | 加入频道后收到的历史消息 |
+| `chat` | 新聊天消息（含 id、replyTo） |
+| `system` | 系统通知 |
+| `users` | 在线用户列表 |
+| `dm:open` | 私聊房间信息 |
+| `kicked` | 被踢出通知 |
+| `banned` | 被封禁通知 |
 | `error` | 错误信息 |
+
+## Nginx 部署（可选）
+
+```bash
+cp config/nginx-chat.conf /etc/nginx/conf.d/chat.conf
+# 编辑 server_name 和 root 路径
+nginx -s reload
+```
+
+配置包含静态文件、API 代理和 WebSocket 升级支持。
+
+## 数据库
+
+使用 v2.0 Schema，共 10 张表：
+
+| 表名 | 说明 |
+|------|------|
+| `users` | 用户表（含角色、状态） |
+| `rooms` | 房间表（public/private/dm） |
+| `room_members` | 房间成员（含禁言状态） |
+| `messages` | 消息表（JSON 内容，支持回复） |
+| `message_reads` | 消息已读记录 |
+| `user_bans` | 用户封禁记录 |
+| `audit_logs` | 审计日志 |
+| `attachments` | 附件记录 |
+| `user_sessions` | 用户会话 |
+| `room_invitations` | 房间邀请 |
 
 ## License
 
