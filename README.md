@@ -1,4 +1,4 @@
-# 实时聊天室
+# Web Chat Platform
 
 基于 WebSocket + Express + MySQL 的实时聊天系统，支持用户认证、多房间群聊、私聊、图片消息、消息回复、管理员后台等功能。
 
@@ -33,7 +33,7 @@
 ## 项目结构
 
 ```
-chat/
+web-chat-platform/
 ├── src/
 │   ├── server.js              # 入口：HTTP + WebSocket 服务，JWT 认证
 │   ├── db.js                  # 数据库连接池 + v2.0 Schema 自动建表
@@ -50,6 +50,7 @@ chat/
 │   ├── routes/
 │   │   ├── auth.js           # 注册/登录/登出/获取用户 API
 │   │   ├── admin.js          # 管理员 API（用户管理/封禁/审计日志）
+│   │   ├── upload.js         # 登录用户图片上传 API
 │   │   └── health.js         # 健康检查 + 缓存合并
 │   ├── services/
 │   │   ├── message.js        # 消息存储/查询/已读标记
@@ -66,7 +67,7 @@ chat/
 │   │   ├── ws.js             # WebSocket 连接管理（自动重连）
 │   │   ├── chat.js           # 聊天界面逻辑（消息渲染/回复/表情）
 │   │   ├── room.js           # 频道切换/私聊列表
-│   │   ├── upload.js         # 文件上传（预留）
+│   │   ├── upload.js         # 图片选择、上传和消息发送
 │   │   └── admin.js          # 管理后台逻辑
 │   ├── css/
 │   │   └── styles.css        # 统一样式（桌面/平板/手机响应式）
@@ -76,10 +77,6 @@ chat/
 │   └── messages-buffer.json  # 运行时缓存文件
 ├── config/
 │   └── nginx-chat.conf       # Nginx 配置（静态文件 + API + WebSocket）
-├── 历史/
-│   ├── 实施方案.md            # 重构实施方案
-│   ├── 数据库设计文档.md       # 数据库设计文档
-│   └── chat_app_backup.sql   # 旧数据备份
 ├── .env                      # 环境变量
 ├── package.json
 └── README.md
@@ -95,8 +92,8 @@ chat/
 ### 安装
 
 ```bash
-git clone <仓库地址>
-cd chat
+git clone git@github.com:1497105876/web-chat-platform.git
+cd web-chat-platform
 npm install
 ```
 
@@ -115,6 +112,8 @@ npm install
 | JWT_SECRET | | JWT 签名密钥（生产环境必须修改） |
 | JWT_EXPIRES_IN | 7d | JWT 过期时间 |
 | ALLOWED_ORIGINS | * | 允许的跨域来源，逗号分隔 |
+| MAX_FILE_SIZE | 5242880 | 上传文件大小限制，默认 5MB |
+| ALLOWED_FILE_TYPES | jpg,jpeg,png,gif,webp | 允许上传的图片扩展名 |
 
 ### 初始化数据库
 
@@ -165,6 +164,12 @@ npm run dev
 | `/api/auth/logout` | POST | 登出 | Bearer |
 | `/api/auth/me` | GET | 获取当前用户信息 | Bearer |
 
+### 上传 API（需登录）
+
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/api/upload` | POST | 上传图片文件，表单字段名为 `file` |
+
 ### 管理员 API（需 admin 角色）
 
 | 端点 | 方法 | 说明 |
@@ -196,6 +201,7 @@ npm run dev
 | `leave` | | 离开当前频道 |
 | `chat` | `{ content, contentType, replyTo? }` | 发送消息 |
 | `dm` | `{ targetUserId }` | 发起私聊 |
+| `recall` | `{ messageId }` | 撤回本人消息 |
 | `read` | `{ lastMessageId }` | 上报已读 |
 | `admin:kick` | `{ userId, roomId }` | 踢出用户 (管理员) |
 | `admin:ban` | `{ userId, reason, expiresAt? }` | 封禁用户 (管理员) |
@@ -211,6 +217,7 @@ npm run dev
 | `system` | 系统通知 |
 | `users` | 在线用户列表 |
 | `dm:open` | 私聊房间信息 |
+| `msg_deleted` / `recall_ok` | 消息被撤回或撤回成功 |
 | `kicked` | 被踢出通知 |
 | `banned` | 被封禁通知 |
 | `error` | 错误信息 |
