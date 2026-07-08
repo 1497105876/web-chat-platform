@@ -62,16 +62,54 @@
     }
 
     if (type !== 'system' && id) {
+      const actionsEl = document.createElement('div');
+      actionsEl.className = 'msg-actions';
+
       const replyBtn = document.createElement('button');
       replyBtn.className = 'reply-btn';
       replyBtn.textContent = '回复';
       replyBtn.addEventListener('click', () => {
         replyToId = id;
-        replyText.textContent = `回复 ${username}: ${(content?.text || '').slice(0, 60)}`;
+        const preview = content?.text ? content.text.slice(0, 60) : (contentType === 'image' ? '[图片]' : '...');
+        replyText.textContent = `回复 ${username}: ${preview}`;
         replyPreview.style.display = '';
         messageInput.focus();
       });
-      meta.appendChild(replyBtn);
+      actionsEl.appendChild(replyBtn);
+
+      // 撤回按钮：仅自己的消息，2 分钟内
+      if (user && username === user.username && createdAt) {
+        const elapsed = Date.now() - new Date(createdAt).getTime();
+        if (elapsed < 2 * 60 * 1000) {
+          const recallBtn = document.createElement('button');
+          recallBtn.className = 'reply-btn';
+          recallBtn.textContent = '撤回';
+          recallBtn.addEventListener('click', () => {
+            if (!confirm('确认撤回这条消息？')) return;
+            ChatWS.send({ type: 'recall', messageId: id });
+          });
+          actionsEl.appendChild(recallBtn);
+
+          const remaining = 2 * 60 * 1000 - elapsed;
+          setTimeout(() => {
+            if (recallBtn.parentNode) recallBtn.remove();
+          }, remaining);
+        }
+      }
+
+      // 管理员删除按钮
+      if (user && (user.role === 'admin' || user.role === 'super_admin')) {
+        const delBtn = document.createElement('button');
+        delBtn.className = 'reply-btn btn-danger';
+        delBtn.textContent = '删除';
+        delBtn.addEventListener('click', () => {
+          if (!confirm('确认删除这条消息？')) return;
+          ChatWS.send({ type: 'admin:delete_msg', messageId: id });
+        });
+        actionsEl.appendChild(delBtn);
+      }
+
+      meta.appendChild(actionsEl);
     }
 
     wrapper.append(meta, body);
@@ -159,6 +197,18 @@
       content: { text: payload.message || '错误' },
       createdAt: new Date().toISOString()
     });
+  });
+
+  ChatWS.on('msg_deleted', (payload) => {
+    const msgEl = logEl.querySelector(`[data-msg-id="${payload.messageId}"]`);
+    if (msgEl) {
+      msgEl.style.opacity = '0.3';
+      msgEl.style.pointerEvents = 'none';
+      const body = msgEl.querySelector('.body');
+      if (body) body.textContent = '[消息已撤回]';
+      const actions = msgEl.querySelector('.msg-actions');
+      if (actions) actions.remove();
+    }
   });
 
   ChatWS.on('kicked', (payload) => {

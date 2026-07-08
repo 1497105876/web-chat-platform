@@ -120,4 +120,24 @@ router.get('/me', authMiddleware, async (req, res) => {
   }
 });
 
+router.get('/users', authMiddleware, async (req, res) => {
+  try {
+    const search = req.query.search || '';
+    const limit = Math.min(50, parseInt(req.query.limit) || 20);
+    let where = "status = 'active' AND id != ?";
+    const params = [req.user.id];
+    if (search) {
+      where += ' AND (username LIKE ? OR nickname LIKE ?)';
+      params.push(`%${search}%`, `%${search}%`);
+    }
+    const [users] = await db.query(
+      `SELECT id, username, nickname, avatar_url FROM users WHERE ${where} ORDER BY username LIMIT ?`,
+      [...params, limit]
+    );
+    res.json({ users });
+  } catch (err) {
+    res.status(500).json({ error: '服务器内部错误' });
+  }
+});
+
 module.exports = router;

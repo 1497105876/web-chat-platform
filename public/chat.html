@@ -45,6 +45,8 @@
         </div>
         <form id="chat-form" class="chat-form">
           <input id="message" type="text" placeholder="说点什么..." maxlength="500" autocomplete="off" />
+          <input id="file-input" type="file" accept="image/*" style="display:none" />
+          <button type="button" id="upload-btn" title="发送图片" class="emoji-item">📷</button>
           <button type="button" id="emoji-btn" title="表情" class="emoji-item">😊</button>
           <div id="emoji-panel" style="display:none"></div>
           <button type="submit" class="primary" disabled>发送</button>

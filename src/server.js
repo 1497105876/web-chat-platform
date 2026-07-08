@@ -13,6 +13,7 @@ const { handleDm } = require('./handlers/dm');
 const healthRoutes = require('./routes/health');
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
+const uploadRoutes = require('./routes/upload');
 const { verifyToken } = require('./auth/middleware');
 
 const PORT = Number(process.env.PORT) || 3000;
@@ -22,6 +23,7 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/upload', uploadRoutes);
 app.use(healthRoutes);
 
 const server = http.createServer(app);
@@ -89,6 +91,35 @@ wss.on('connection', (ws, req) => {
 
       if (data.type === 'dm') {
         await handleDm(ws, data, req);
+        return;
+      }
+
+      if (data.type === 'recall') {
+        const messageService = require('./services/message');
+        const auditService = require('./services/audit');
+        if (!data.messageId) {
+          ws.send(JSON.stringify({ type: 'error', message: '消息 ID 不能为空' }));
+          return;
+        }
+        const result = await messageService.recallMessage(data.messageId, meta.userId);
+        if (!result.ok) {
+          ws.send(JSON.stringify({ type: 'error', message: result.error }));
+          return;
+        }
+        await auditService.log({
+          operatorId: meta.userId, action: 'msg_delete',
+          targetType: 'message', targetId: data.messageId,
+          detail: { type: 'recall' },
+          ipAddress: req.socket?.remoteAddress || 'unknown'
+        });
+        if (meta.channel) {
+          conn.broadcastToChannel(meta.channel, {
+            type: 'msg_deleted',
+            messageId: data.messageId,
+            channel: meta.channel
+          });
+        }
+        ws.send(JSON.stringify({ type: 'recall_ok', messageId: data.messageId }));
         return;
       }
 

@@ -46,7 +46,8 @@ async function loadRecentMessages(roomIdOrChannel, limit = 50) {
       );
       const replyMap = new Map(replies.map(r => {
         let c; try { c = JSON.parse(r.content); } catch { c = { text: r.content }; }
-        return [r.id, { id: r.id, username: r.username, preview: (c.text || '').slice(0, 100) }];
+        const preview = c.text ? c.text.slice(0, 100) : (c.url ? '[图片]' : '...');
+        return [r.id, { id: r.id, username: r.username, preview }];
       }));
       messages.forEach(m => {
         if (m.replyToId) m.replyTo = replyMap.get(m.replyToId) || null;
@@ -96,4 +97,19 @@ async function markAsRead(userId, lastMessageId) {
   );
 }
 
-module.exports = { loadRecentMessages, saveMessage, getMessageById, markAsRead };
+async function recallMessage(messageId, userId) {
+  if (!db.isAvailable()) return { ok: false, error: '数据库不可用' };
+  const [rows] = await db.query(
+    'SELECT id, sender_id, created_at FROM messages WHERE id = ? AND is_deleted = 0',
+    [messageId]
+  );
+  if (!rows[0]) return { ok: false, error: '消息不存在或已撤回' };
+  const msg = rows[0];
+  if (msg.sender_id !== userId) return { ok: false, error: '只能撤回自己的消息' };
+  const elapsed = Date.now() - new Date(msg.created_at).getTime();
+  if (elapsed > 2 * 60 * 1000) return { ok: false, error: '超过 2 分钟，无法撤回' };
+  await db.query('UPDATE messages SET is_deleted = 1 WHERE id = ?', [messageId]);
+  return { ok: true };
+}
+
+module.exports = { loadRecentMessages, saveMessage, getMessageById, markAsRead, recallMessage };

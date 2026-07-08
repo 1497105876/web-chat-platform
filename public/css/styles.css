@@ -260,7 +260,6 @@ input:focus, select:focus { outline: 1px solid var(--accent); border-color: var(
 }
 
 .reply-btn {
-  margin-left: auto;
   font-size: 11px;
   padding: 2px 8px;
   background: transparent;
@@ -269,6 +268,12 @@ input:focus, select:focus { outline: 1px solid var(--accent); border-color: var(
   border-radius: 4px;
 }
 .reply-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+.msg-actions {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
 
 .reply-preview {
   display: flex;
@@ -307,6 +312,7 @@ input:focus, select:focus { outline: 1px solid var(--accent); border-color: var(
   border-radius: 4px;
 }
 .emoji-item:hover { background: rgba(255,255,255,0.1); }
+.emoji-item:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* Right sidebar */
 .chat-rightbar {

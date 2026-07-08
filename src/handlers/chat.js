@@ -51,7 +51,9 @@ async function handleChat(ws, data, meta) {
   if (replyToId && db.isAvailable()) {
     const original = await messageService.getMessageById(replyToId);
     if (original) {
-      replyToInfo = { id: original.id, username: original.username, preview: (original.content || '').slice(0, 100) };
+      const c = original.content;
+      const preview = c?.text ? c.text.slice(0, 100) : (c?.url ? '[图片]' : '...');
+      replyToInfo = { id: original.id, username: original.username, preview };
     }
   }
 
