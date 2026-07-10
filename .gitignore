@@ -1,26 +1,34 @@
-# Dependencies
+# 依赖
 node_modules/
 
-# Environment variables
+# 环境变量,数据库密码,JWT密钥
 .env
 .env.*
 !.env.example
 
-# Runtime data
+# 运行时数据
 db/messages-buffer.json
 
-# Logs
+# 日志
 *.log
 logs/
 
-# OS files
+# 系统文件
 .DS_Store
 Thumbs.db
 
-# Editor files
+# 编辑器文件
 .vscode/
 .idea/
 *.swp
 *.swo
 
+# 用户上传的图片
+public/uploads/
+
+# 仅保留 README.md
+*.md
+!README.md
+
+# 其它文件夹
 历史/

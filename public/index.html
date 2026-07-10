@@ -1,27 +1,37 @@
+<!-- 文件说明：index.html - 登录/注册页面
+     用户进入聊天室的入口页面，提供登录和注册两个表单 -->
 <!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>登录 - 实时聊天室</title>
+  <!-- 预连接 Google Fonts 加速字体加载 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- 加载 Space Grotesk 字体 -->
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- 引入全局样式表 -->
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
+  <!-- 认证页面外层容器 -->
   <div class="auth-page">
+    <!-- 认证卡片：包含标题、标签页和表单 -->
     <div class="auth-card">
+      <!-- 页面标题区域 -->
       <div class="auth-header">
         <h1>实时聊天室</h1>
         <p>WebSocket · MySQL · Nginx</p>
       </div>
 
+      <!-- 登录/注册标签页切换 -->
       <div class="auth-tabs">
         <button class="auth-tab active" data-tab="login">登录</button>
         <button class="auth-tab" data-tab="register">注册</button>
       </div>
 
+      <!-- 登录表单 -->
       <form id="login-form" class="auth-form">
         <div class="field">
           <label for="login-username">用户名</label>
@@ -31,10 +41,12 @@
           <label for="login-password">密码</label>
           <input id="login-password" type="password" placeholder="请输入密码" required />
         </div>
+        <!-- 登录错误提示区域 -->
         <div id="login-error" class="auth-error"></div>
         <button type="submit" class="primary auth-submit">登录</button>
       </form>
 
+      <!-- 注册表单（默认隐藏，点击"注册"标签后显示） -->
       <form id="register-form" class="auth-form" style="display:none">
         <div class="field">
           <label for="reg-username">用户名</label>
@@ -52,12 +64,14 @@
           <label for="reg-password2">确认密码</label>
           <input id="reg-password2" type="password" placeholder="再次输入密码" required />
         </div>
+        <!-- 注册错误提示区域 -->
         <div id="reg-error" class="auth-error"></div>
         <button type="submit" class="primary auth-submit">注册</button>
       </form>
     </div>
   </div>
 
+  <!-- 引入认证逻辑脚本 -->
   <script src="/js/auth.js"></script>
 </body>
 </html>

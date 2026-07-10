@@ -1,8 +1,14 @@
+// db.js — 数据库连接与表结构管理
+// 负责：创建 MySQL 连接池、初始化所有表结构、提供查询接口
+// 支持降级模式：数据库不可用时通过标志位切换到文件缓存
 const mysql = require('mysql2/promise');
 
+// 连接池实例（惰性创建）
 let pool = null;
+// 数据库可用性标志
 let dbAvailable = true;
 
+// 获取或创建 MySQL 连接池，单例模式
 function getPool() {
   if (!pool) {
     pool = mysql.createPool({
@@ -18,12 +24,16 @@ function getPool() {
   return pool;
 }
 
+// 查询数据库是否可用
 function isAvailable() { return dbAvailable; }
+// 标记数据库不可用（降级模式）
 function setUnavailable() { dbAvailable = false; }
 
+// 初始化所有表结构，服务启动时调用一次
 async function ensureSchema() {
   const pool = getPool();
 
+  // 用户表：存储账号、昵称、密码哈希、角色、状态等
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -42,6 +52,7 @@ async function ensureSchema() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   `);
 
+  // 房间表：公共频道和私聊房间
   await pool.query(`
     CREATE TABLE IF NOT EXISTS rooms (
       id INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -60,6 +71,7 @@ async function ensureSchema() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   `);
 
+  // 房间成员表：用户与房间的多对多关系，含角色和禁言状态
   await pool.query(`
     CREATE TABLE IF NOT EXISTS room_members (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -77,6 +89,7 @@ async function ensureSchema() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   `);
 
+  // 消息表：存储聊天消息内容、类型、回复关系、删除标记
   await pool.query(`
     CREATE TABLE IF NOT EXISTS messages (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -97,6 +110,7 @@ async function ensureSchema() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   `);
 
+  // 消息已读表：记录用户对某条消息的已读状态
   await pool.query(`
     CREATE TABLE IF NOT EXISTS message_reads (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -111,6 +125,7 @@ async function ensureSchema() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   `);
 
+  // 用户封禁表：记录封禁原因、范围（全局/房间级）、过期时间
   await pool.query(`
     CREATE TABLE IF NOT EXISTS user_bans (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -130,6 +145,7 @@ async function ensureSchema() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   `);
 
+  // 审计日志表：记录管理员操作，便于安全审计追溯
   await pool.query(`
     CREATE TABLE IF NOT EXISTS audit_logs (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -149,7 +165,7 @@ async function ensureSchema() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   `);
 
-  // Seed default rooms if empty
+  // 如果房间表为空，插入三个默认公共频道
   const [existing] = await pool.query('SELECT COUNT(*) AS cnt FROM rooms');
   if (existing[0].cnt === 0) {
     await pool.query(`
@@ -161,6 +177,7 @@ async function ensureSchema() {
   }
 }
 
+// 通用查询方法，对外暴露连接池的 query 接口
 async function query(sql, params) {
   return getPool().query(sql, params);
 }

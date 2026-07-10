@@ -1,35 +1,49 @@
+<!-- 文件说明：chat.html - 聊天主界面
+     包含频道列表、私聊列表、消息区、在线用户列表和输入区 -->
 <!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>聊天室</title>
+  <!-- 预连接 Google Fonts 加速字体加载 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- 引入全局样式表 -->
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
+  <!-- 聊天页面整体容器 -->
   <div class="chat-page">
+    <!-- 顶部导航栏 -->
     <header class="chat-header">
       <div class="chat-logo">聊天室</div>
+      <!-- 中间显示当前频道名和在线人数 -->
       <div class="chat-header-center">
         <span id="channel-name" class="channel-name">大厅</span>
         <span id="online-count" class="pill">0 在线</span>
       </div>
+      <!-- 右侧显示用户信息和操作按钮 -->
       <div class="chat-header-right">
         <span id="user-display" class="user-badge"></span>
+        <!-- 管理按钮：仅管理员可见，点击跳转管理后台 -->
         <button id="admin-btn" class="ghost" style="display:none" onclick="location.href='/admin.html'">管理</button>
+        <!-- 退出登录按钮 -->
         <button id="logout-btn" class="ghost">退出</button>
       </div>
     </header>
 
+    <!-- 聊天主体布局：左侧边栏 + 中间消息区 + 右侧边栏 -->
     <div class="chat-layout">
+      <!-- 左侧边栏：频道列表和私聊列表 -->
       <aside class="chat-sidebar">
+        <!-- 公共频道列表 -->
         <div class="sidebar-section">
           <div class="sidebar-title">频道</div>
           <ul id="room-list" class="room-list"></ul>
         </div>
+        <!-- 私聊列表 -->
         <div class="sidebar-section">
           <div class="sidebar-title">私聊</div>
           <ul id="dm-list" class="room-list"></ul>
@@ -37,28 +51,39 @@
         </div>
       </aside>
 
+      <!-- 中间主区域：消息展示和输入 -->
       <main class="chat-main">
+        <!-- 消息列表展示区 -->
         <div id="log" class="log"></div>
+        <!-- 回复预览条：显示正在回复的消息，可取消 -->
         <div id="reply-preview" class="reply-preview" style="display:none">
           <span id="reply-text"></span>
           <button id="reply-cancel" class="reply-cancel">&times;</button>
         </div>
+        <!-- 消息输入表单 -->
         <form id="chat-form" class="chat-form">
           <input id="message" type="text" placeholder="说点什么..." maxlength="500" autocomplete="off" />
+          <!-- 隐藏的文件选择框，用于图片上传 -->
           <input id="file-input" type="file" accept="image/*" style="display:none" />
+          <!-- 图片上传按钮 -->
           <button type="button" id="upload-btn" title="发送图片" class="emoji-item">📷</button>
+          <!-- 表情面板触发按钮 -->
           <button type="button" id="emoji-btn" title="表情" class="emoji-item">😊</button>
+          <!-- 表情面板容器 -->
           <div id="emoji-panel" style="display:none"></div>
+          <!-- 发送按钮：未连接时禁用 -->
           <button type="submit" class="primary" disabled>发送</button>
         </form>
       </main>
 
+      <!-- 右侧边栏：在线用户列表和连接状态 -->
       <aside class="chat-rightbar">
         <div class="panel-head">
           <h2>在线</h2>
           <span id="online-count-2" class="pill">0</span>
         </div>
         <ul id="online-list" class="online-list"></ul>
+        <!-- 连接状态提示区 -->
         <div class="note">
           <p id="info"></p>
         </div>
@@ -66,6 +91,7 @@
     </div>
   </div>
 
+  <!-- 发起私聊的模态框：搜索用户并选择后创建私聊 -->
   <div id="dm-modal" class="modal" style="display:none">
     <div class="modal-content">
       <div class="modal-header">
@@ -73,12 +99,16 @@
         <button class="modal-close" id="dm-modal-close">&times;</button>
       </div>
       <div class="modal-body">
+        <!-- 用户搜索输入框 -->
         <input id="dm-search" type="text" placeholder="搜索用户名..." />
+        <!-- 搜索结果用户列表 -->
         <ul id="dm-user-list" class="dm-user-list"></ul>
       </div>
     </div>
   </div>
 
+  <!-- 脚本引入顺序：auth -> ws -> room -> chat -> upload
+       因为存在依赖关系，必须按此顺序加载 -->
   <script src="/js/auth.js"></script>
   <script src="/js/ws.js"></script>
   <script src="/js/room.js"></script>

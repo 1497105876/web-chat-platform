@@ -15,7 +15,8 @@
 | 历史消息 | 已实现 | 加入频道时加载最近 50 条历史消息 |
 | 图片传输 | 已实现 | 支持 jpg/png/gif/webp，最大 5MB |
 | 消息回复 | 已实现 | 引用原消息进行回复 |
-| 一对一私聊 | 已实现 | 自动创建 DM 房间 |
+| 消息撤回 | 已实现 | 普通用户可撤回 2 分钟内自己发的消息；管理员不显示撤回按钮，使用删除代替 |
+| 一对一私聊 | 已实现 | 自动创建 DM 房间，登录后自动加载已有私聊列表，对方发起私聊时双方侧边栏同步显示 |
 | 管理员后台 | 已实现 | 用户管理、封禁/解封、踢出、禁言 |
 | 审计日志 | 已实现 | 记录所有管理操作和登录登出 |
 | 已读回执 | 已实现 | 消息已读状态记录 |
@@ -201,7 +202,7 @@ npm run dev
 | `leave` | | 离开当前频道 |
 | `chat` | `{ content, contentType, replyTo? }` | 发送消息 |
 | `dm` | `{ targetUserId }` | 发起私聊 |
-| `recall` | `{ messageId }` | 撤回本人消息 |
+| `recall` | `{ messageId }` | 撤回本人消息（普通用户，2 分钟内） |
 | `read` | `{ lastMessageId }` | 上报已读 |
 | `admin:kick` | `{ userId, roomId }` | 踢出用户 (管理员) |
 | `admin:ban` | `{ userId, reason, expiresAt? }` | 封禁用户 (管理员) |
@@ -216,7 +217,8 @@ npm run dev
 | `chat` | 新聊天消息（含 id、replyTo） |
 | `system` | 系统通知 |
 | `users` | 在线用户列表 |
-| `dm:open` | 私聊房间信息 |
+| `dm:open` | 私聊房间信息（发起者自动切换，对方仅加入列表） |
+| `dm:list` | 登录后推送已有私聊房间列表 |
 | `msg_deleted` / `recall_ok` | 消息被撤回或撤回成功 |
 | `kicked` | 被踢出通知 |
 | `banned` | 被封禁通知 |
@@ -249,6 +251,3 @@ nginx -s reload
 | `user_sessions` | 用户会话 |
 | `room_invitations` | 房间邀请 |
 
-## License
-
-MIT

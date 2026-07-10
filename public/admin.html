@@ -1,35 +1,47 @@
+<!-- 文件说明：admin.html - 管理后台页面
+     包含用户管理（角色调整、封禁/解封）和审计日志查看功能
+     仅 admin 和 super_admin 角色可访问 -->
 <!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>管理后台 - 实时聊天室</title>
+  <!-- 预连接 Google Fonts 加速字体加载 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- 引入全局样式表 -->
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
+  <!-- 管理后台页面整体容器 -->
   <div class="admin-page">
+    <!-- 顶部导航栏 -->
     <header class="admin-header">
       <a href="/chat.html" class="chat-logo">聊天室</a>
       <h1>管理后台</h1>
       <div class="admin-header-right">
+        <!-- 显示当前管理员信息 -->
         <span id="admin-user" class="user-badge"></span>
         <a href="/chat.html" class="ghost">返回聊天</a>
       </div>
     </header>
 
+    <!-- 功能标签页切换：用户管理 / 审计日志 -->
     <div class="admin-tabs">
       <button class="admin-tab active" data-tab="users">用户管理</button>
       <button class="admin-tab" data-tab="logs">审计日志</button>
     </div>
 
+    <!-- 用户管理标签页内容 -->
     <div id="tab-users" class="admin-tab-content">
+      <!-- 搜索工具栏 -->
       <div class="admin-toolbar">
         <input id="user-search" type="text" placeholder="搜索用户名..." />
         <button id="user-search-btn" class="primary">搜索</button>
       </div>
+      <!-- 用户列表表格 -->
       <div class="admin-table-wrap">
         <table class="admin-table">
           <thead>
@@ -43,13 +55,17 @@
               <th>操作</th>
             </tr>
           </thead>
+          <!-- 用户列表数据通过 JS 动态填充 -->
           <tbody id="user-table-body"></tbody>
         </table>
       </div>
+      <!-- 分页控件 -->
       <div id="user-pagination" class="admin-pagination"></div>
     </div>
 
+    <!-- 审计日志标签页内容（默认隐藏） -->
     <div id="tab-logs" class="admin-tab-content" style="display:none">
+      <!-- 日志筛选工具栏 -->
       <div class="admin-toolbar">
         <select id="log-action-filter">
           <option value="">全部操作</option>
@@ -63,6 +79,7 @@
         </select>
         <button id="log-filter-btn" class="primary">筛选</button>
       </div>
+      <!-- 审计日志表格 -->
       <div class="admin-table-wrap">
         <table class="admin-table">
           <thead>
@@ -77,13 +94,16 @@
               <th>时间</th>
             </tr>
           </thead>
+          <!-- 日志数据通过 JS 动态填充 -->
           <tbody id="log-table-body"></tbody>
         </table>
       </div>
+      <!-- 分页控件 -->
       <div id="log-pagination" class="admin-pagination"></div>
     </div>
   </div>
 
+  <!-- 封禁用户模态框：输入封禁原因和过期时间 -->
   <div id="ban-modal" class="modal" style="display:none">
     <div class="modal-content">
       <div class="modal-header">
@@ -99,12 +119,14 @@
           <label>过期时间（可选）</label>
           <input id="ban-expires" type="datetime-local" />
         </div>
+        <!-- 隐藏字段：存储待封禁的用户 ID -->
         <input id="ban-user-id" type="hidden" />
         <button id="ban-confirm" class="primary">确认封禁</button>
       </div>
     </div>
   </div>
 
+  <!-- 脚本引入：auth 先加载提供鉴权，admin 依赖 auth -->
   <script src="/js/auth.js"></script>
   <script src="/js/admin.js"></script>
 </body>
