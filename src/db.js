@@ -18,7 +18,7 @@ function getPool() {
       password: process.env.DB_PASSWORD || '',
       database: process.env.DB_NAME || 'chat_app',
       connectionLimit: 10,
-      timezone: 'Z'
+      timezone: '+08:00'
     });
   }
   return pool;
